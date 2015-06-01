@@ -1,0 +1,18 @@
+{application, gold_fever, [
+  {description, "A Treasure Hunt for Erlangers"},
+  {vsn, "0.0.1"},
+  {id, "gold_fever"},
+  {registered, []},
+  {applications, [
+    kernel,
+    stdlib,
+    sasl,
+    lager,
+    cowboy,
+    katana
+  ]},
+  {modules, []},
+  {mod, {gold_fever, []}},
+  {env, []},
+  {start_phases, []}
+ ]}.
