@@ -13,11 +13,5 @@
     {sasl_error_logger, false},
     {errlog_type, error}
    ]
-  },
-  {serpents,
-   [
-    {http_port, 8585},
-    {http_listener_count, 10}
-   ]
   }
 ].
