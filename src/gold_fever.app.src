@@ -8,7 +8,6 @@
     stdlib,
     sasl,
     lager,
-    cowboy,
     katana
   ]},
   {modules, []},

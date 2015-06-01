@@ -1,9 +1,6 @@
 -module(gf_xref_SUITE).
 -author('elbrujohalcon@inaka.net').
 
--ignore_xref([all/0]).
--ignore_xref([xref/1]).
-
 -export([all/0]).
 -export([xref/1]).
 
