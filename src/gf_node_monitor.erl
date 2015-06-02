@@ -19,7 +19,9 @@
 %%% External API functions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 -spec start_link() -> {ok, pid()}.
-start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, noargs, []).
+start_link() ->
+  gen_server:start_link(
+    {local, ?MODULE}, ?MODULE, noargs, [{debug, [trace, log]}]).
 
 -spec send_message(node(), iodata()) -> ok.
 send_message(Node, Message) ->
@@ -44,9 +46,7 @@ handle_info({nodeup, Node, Data}, State) ->
   gf_kathy:start(Node),
   {noreply, State};
 handle_info({nodedown, Node, Data}, State) ->
-  lager:notice(
-    "~p is DOWN! (~p). Starting the reconnection process...",
-    [Node, Data]),
+  lager:notice("~p is DOWN! (~p).", [Node, Data]),
   gf_kathy:stop(Node),
   {noreply, State}.
 

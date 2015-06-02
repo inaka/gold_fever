@@ -26,6 +26,11 @@
               , badauth => "a message with ~s"
               , unexpected => "a message with ~p"
               }}
+   , {step4, #{ message => "da message"
+              }}
+   , {step5, #{ message => "da message"
+              , reason => "da reason"
+              }}
    ]
   }
 ].

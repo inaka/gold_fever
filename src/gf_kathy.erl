@@ -6,10 +6,11 @@
 -record(state, { node     :: node()
                , process  :: pid()
                , token    :: binary()
+               , server   :: atom()
                }).
 -type state() :: #state{}.
 
--export([start/1, stop/1]).
+-export([start/1, stop/1, process_name/1, server/1]).
 -export(
   [ start_link/1
   , init/1
@@ -35,8 +36,16 @@
 start(Node) -> gf_kathy_sup:start_child(Node).
 
 -spec stop(node()) -> ok.
-stop(Node) -> gen_fsm:send_all_state_event(process_name(Node), stop).
+stop(Node) -> gf_kathy_group:stop(Node).
 
+-spec process_name(node()) -> atom().
+process_name(Node) ->
+  Bin = atom_to_binary(Node, utf8),
+  binary_to_atom(<<"kathy:", Bin/binary>>, utf8).
+
+-spec server(node()) -> undefined | atom().
+server(Node) ->
+  gen_fsm:sync_send_all_state_event(process_name(Node), server).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PRIVATELY EXPORTED FUNCTIONS
@@ -55,10 +64,10 @@ init(Node) -> {ok, expecting_flowers, #state{node = Node}, 0}.
 -spec handle_event(stop, atom(), state()) -> {stop, normal, state()}.
 handle_event(stop, _StateName, State) -> {stop, normal, State}.
 
--spec handle_sync_event(X, _From, atom(), state()) ->
-  {reply, {unknown, X}, atom(), state()}.
-handle_sync_event(X, _From, StateName, State) ->
-  {reply, {unknown, X}, StateName, State}.
+-spec handle_sync_event(server, _From, atom(), state()) ->
+  {reply, atom(), atom(), state()}.
+handle_sync_event(server, _From, StateName, State) ->
+  {reply, State#state.server, StateName, State}.
 
 -spec handle_info(term(), atom(), state()) -> {next_state, atom(), state()}.
 handle_info(flower, expecting_flowers, State) ->
@@ -82,7 +91,7 @@ handle_info(
   #{token := Token, name := Name}, expecting_maps,
   State = #state{token = Token}) ->
   send_messages_to_gen_server({Name, State#state.node}),
-  {next_state, expecting_colors, State};
+  {next_state, expecting_colors, State#state{server = Name}};
 handle_info(#{token := Token}, expecting_maps, State = #state{token = Token}) ->
   Message = io_lib:format(gold_fever:get_config(step3, missing), [name]),
   gf_node_monitor:send_message(State#state.node, Message),
@@ -158,8 +167,19 @@ expecting_colors(Request, State) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% INTERNAL FUNCTIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-process_name(Node) ->
-  Bin = atom_to_binary(Node, utf8),
-  binary_to_atom(<<"kathy:", Bin/binary>>, utf8).
-
-send_messages_to_gen_server(_GenServer) -> ok.
+send_messages_to_gen_server(GenServer) ->
+  ktn_task:wait_for_success(
+    fun() ->
+      {monitored_by, [_|_]} = erlang:process_info(self(), monitored_by)
+    end),
+  Message = gold_fever:get_config(step4, message),
+  InfoMsg = [lists:nth(I, Message) || I <- lists:seq(1, length(Message), 3)],
+  CastMsg = [lists:nth(I, Message) || I <- lists:seq(2, length(Message), 3)],
+  CallMsg = [lists:nth(I, Message) || I <- lists:seq(3, length(Message), 3)],
+  gen_server:cast(GenServer, CastMsg),
+  GenServer ! InfoMsg,
+  try gen_server:call(GenServer, CallMsg) of
+    R -> lager:notice("~p said ~p", [GenServer, R])
+  catch
+    _:E -> lager:warning("~p couldn't get the call: ~p", [GenServer, E])
+  end.

@@ -18,7 +18,7 @@ start_child(Node) -> supervisor:start_child(?MODULE, [Node]).
 -spec init(noargs) ->
   {ok, {{simple_one_for_one, 5, 10}, [supervisor:child_spec()]}}.
 init(noargs) ->
-  Kathy =
-    {gf_kathy, {gf_kathy, start_link, []},
-      temporary, brutal_kill, worker, [gf_kathy]},
-  {ok, {{simple_one_for_one, 5, 10}, [Kathy]}}.
+  KathyGroup =
+    {gf_kathy_group, {gf_kathy_group, start_link, []},
+      temporary, 1000, supervisor, [gf_kathy_group]},
+  {ok, {{simple_one_for_one, 5, 10}, [KathyGroup]}}.
