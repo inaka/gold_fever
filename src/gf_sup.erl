@@ -22,4 +22,14 @@ init(noargs) ->
   KatanaRandom =
     {ktn_random, {ktn_random, start_link, []},
       permanent, 5000, worker, [ktn_random]},
-  {ok, {{one_for_one, 5, 10}, [KatanaRandom]}}.
+  NodeMonitor =
+    {gf_node_monitor, {gf_node_monitor, start_link, []},
+      permanent, 5000, worker, [gf_node_monitor]},
+  KathySup =
+    {gf_kathy_sup, {gf_kathy_sup, start_link, []},
+      permanent, 5000, supervisor, [gf_kathy_sup]},
+  { ok
+  , { {one_for_one, 5, 10}
+    , [KatanaRandom, NodeMonitor, KathySup]
+    }
+  }.

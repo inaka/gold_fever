@@ -13,5 +13,19 @@
     {sasl_error_logger, false},
     {errlog_type, error}
    ]
+  },
+  {gold_fever,
+   [ {step1, #{ cookie => 'DA COOKIE'
+              , message => "da message"
+              }}
+   , {step2, #{ message => "da message"
+              , unexpected => "a message with ~p"
+              }}
+   , {step3, #{ message => "da message"
+              , missing => "a message with ~p"
+              , badauth => "a message with ~s"
+              , unexpected => "a message with ~p"
+              }}
+   ]
   }
 ].
