@@ -53,7 +53,14 @@
               , badauth => "an error message"
               , notaurl => "an error message"
               }}
-   , {step9, #{ nodename => 'a node name'
+   , {step9, #{ nodename => 'a-node-name'
+              , attempts => 5
+              , password => 'a-password'
+              , warning => "a warning message"
+              , rickroll => "a link"
+              , unlocked => "a message"
+              , wrongpwd => "a message with ~p"
+              , treasure => "da treasure"
               }}
    ]
   }

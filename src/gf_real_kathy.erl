@@ -82,10 +82,10 @@ handle_cast(#{token := Token, address := Address} = Msg, State) ->
         {ok, ParsedUrl} ->
           put_image(ParsedUrl)
       end;
-    Node ->
-      gf_node_monitor:send_message(Node, gold_fever:get_config(step8, toosoon));
     notfound ->
-      lager:warning("Unexpected token: ~p", [Msg])
+      lager:warning("Unexpected token: ~p", [Msg]);
+    Node ->
+      gf_node_monitor:send_message(Node, gold_fever:get_config(step8, toosoon))
   end,
   {noreply, State};
 handle_cast(#{token := Token} = Msg, State) ->
@@ -93,10 +93,10 @@ handle_cast(#{token := Token} = Msg, State) ->
     Caller when is_pid(Caller) ->
       Message = io_lib:format(gold_fever:get_config(step8, missing), [address]),
       Caller ! iolist_to_binary(Message);
-    Node ->
-      gf_node_monitor:send_message(Node, gold_fever:get_config(step8, toosoon));
     notfound ->
-      lager:warning("Unexpected token: ~p", [Msg])
+      lager:warning("Unexpected token: ~p", [Msg]);
+    Node ->
+      gf_node_monitor:send_message(Node, gold_fever:get_config(step8, toosoon))
   end,
   {noreply, State};
 handle_cast(_Cast, State) -> {noreply, State}.

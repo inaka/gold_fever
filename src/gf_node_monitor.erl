@@ -100,5 +100,6 @@ start_slave() ->
   slave:start_link(list_to_atom(Host), Name, Args).
 
 hid_treasure(Node) ->
-  {ok, Pid} = rpc:call(Node, gf_vault, start, []),
+  Config = application:get_env(gold_fever, step9, #{}),
+  {ok, Pid} = rpc:call(Node, gf_vault, start, [Config]),
   Pid ! hide.
