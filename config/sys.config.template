@@ -44,6 +44,15 @@
               , expired => "an error message"
               , badauth => "an error message"
               }}
+   , {step8, #{ image => "a file path"
+              , path => "a-single-word-that-is-a-url-path"
+              , message => "da message"
+              , headers => #{<<"a">> => <<"map">>, <<"of">> => <<"headers">>}
+              , missing => "a message with '~p'"
+              , toosoon => "an error message"
+              , badauth => "an error message"
+              , notaurl => "an error message"
+              }}
    ]
   }
 ].
