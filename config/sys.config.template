@@ -31,6 +31,19 @@
    , {step5, #{ message => "da message"
               , reason => "da reason"
               }}
+   , {step6, #{ answers => [some, atoms]
+              , message => "da message"
+              , regexes => [<<"some">>, <<"rege*es">>]
+              , missing => "a message with ~p"
+              , unknown => "an error message"
+              , badauth => "a message with ~p"
+              , unexpected => "a message with ~p"
+              }}
+   , {step7, #{ welcome => "a welcoming message"
+              , message => "da message"
+              , expired => "an error message"
+              , badauth => "an error message"
+              }}
    ]
   }
 ].

@@ -7,6 +7,7 @@
                , process  :: pid()
                , token    :: binary()
                , server   :: atom()
+               , answers  :: [atom()]
                }).
 -type state() :: #state{}.
 
@@ -67,7 +68,9 @@ handle_event(stop, _StateName, State) -> {stop, normal, State}.
 -spec handle_sync_event(server, _From, atom(), state()) ->
   {reply, atom(), atom(), state()}.
 handle_sync_event(server, _From, StateName, State) ->
-  {reply, State#state.server, StateName, State}.
+  {reply, State#state.server, StateName, State};
+handle_sync_event(Msg, From, expecting_colors, State) ->
+  expecting_colors(Msg, From, State).
 
 -spec handle_info(term(), atom(), state()) -> {next_state, atom(), state()}.
 handle_info(flower, expecting_flowers, State) ->
@@ -91,7 +94,8 @@ handle_info(
   #{token := Token, name := Name}, expecting_maps,
   State = #state{token = Token}) ->
   send_messages_to_gen_server({Name, State#state.node}),
-  {next_state, expecting_colors, State#state{server = Name}};
+  Answers = gold_fever:get_config(step6, answers),
+  {next_state, expecting_colors, State#state{server = Name, answers = Answers}};
 handle_info(#{token := Token}, expecting_maps, State = #state{token = Token}) ->
   Message = io_lib:format(gold_fever:get_config(step3, missing), [name]),
   gf_node_monitor:send_message(State#state.node, Message),
@@ -110,7 +114,8 @@ handle_info(NotMap, expecting_maps, State) ->
   {next_state, expecting_maps, State};
 handle_info(Info, StateName, State) ->
   lager:notice("~p received at ~p", [Info, StateName]),
-  gf_node_monitor:send_message(State#state.node, "I'm not listening to you"),
+  gf_node_monitor:send_message(
+    State#state.node, "This is not the way to talk to me"),
   {next_state, StateName, State}.
 
 -spec terminate(term(), atom(), state()) -> ok.
@@ -131,7 +136,7 @@ expecting_flowers(Request, _From, State) ->
   {next_state, expecting_flowers, state()} |
   {next_state, atom(), state(), 1000}.
 expecting_flowers(timeout, State) ->
-  Token = ktn_random:generate(),
+  Token = gf_real_kathy:token(State#state.node),
   Instructions = gold_fever:get_config(step2, message),
   Message = #{token => Token, kathy => self(), instructions => Instructions},
   {larry, State#state.node} ! Message,
@@ -153,10 +158,32 @@ expecting_maps(Request, State) ->
   {next_state, expecting_maps, State}.
 
 -spec expecting_colors(term(), _From, state()) ->
-  {reply, not_an_fsm, expecting_colors, state()}.
-expecting_colors(Request, _From, State) ->
-  lager:warning("Invalid Request: ~p", [Request]),
-  {reply, not_an_fsm, expecting_colors, State}.
+  {reply, term(), expecting_colors, state()} |
+  {stop, normal, iodata(), state()}.
+expecting_colors(
+  #{token := Token, question := Q}, _From, State = #state{token = Token}) ->
+  case {is_proper_question(Q), State#state.answers} of
+    {true, []} ->
+      Message = gold_fever:get_config(step6, message),
+      {stop, normal, Message, State};
+    {true, [Answer|Answers]} ->
+      {reply, Answer, expecting_colors, State#state{answers = Answers}};
+    {false, _} ->
+      Message = gold_fever:get_config(step6, unknown),
+      {reply, Message, expecting_colors, State}
+  end;
+expecting_colors(#{token := Token}, _From, State = #state{token = Token}) ->
+  Message = io_lib:format(gold_fever:get_config(step6, missing), [question]),
+  {reply, Message, expecting_colors, State};
+expecting_colors(#{token := Wrong}, _From, State) ->
+  Message = io_lib:format(gold_fever:get_config(step3, badauth), [Wrong]),
+  {reply, Message, expecting_colors, State};
+expecting_colors(#{}, _From, State) ->
+  Message = io_lib:format(gold_fever:get_config(step3, badauth), [noone]),
+  {reply, Message, expecting_colors, State};
+expecting_colors(NotMap, _From, State) ->
+  Message = io_lib:format(gold_fever:get_config(step3, unexpected), [NotMap]),
+  {reply, Message, expecting_colors, State}.
 
 -spec expecting_colors(term(), state()) ->
   {next_state, expecting_colors, state()}.
@@ -183,3 +210,11 @@ send_messages_to_gen_server(GenServer) ->
   catch
     _:E -> lager:warning("~p couldn't get the call: ~p", [GenServer, E])
   end.
+
+is_proper_question(Question) when is_atom(Question) ->
+  is_proper_question(atom_to_binary(Question, utf8));
+is_proper_question(Question) ->
+  Regexes = gold_fever:get_config(step6, regexes),
+  not
+    lists:member(
+      nomatch, [re:run(Question, Regex, [caseless]) || Regex <- Regexes]).

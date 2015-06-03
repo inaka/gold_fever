@@ -28,8 +28,11 @@ init(noargs) ->
   KathySup =
     {gf_kathy_sup, {gf_kathy_sup, start_link, []},
       permanent, 5000, supervisor, [gf_kathy_sup]},
+  TheRealKathy =
+    {gf_real_kathy, {gf_real_kathy, start_link, []},
+      permanent, 1000, worker, [gf_real_kathy]},
   { ok
   , { {one_for_one, 5, 10}
-    , [KatanaRandom, NodeMonitor, KathySup]
+    , [KatanaRandom, NodeMonitor, KathySup, TheRealKathy]
     }
   }.
