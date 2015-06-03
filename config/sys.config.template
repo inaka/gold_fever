@@ -53,6 +53,8 @@
               , badauth => "an error message"
               , notaurl => "an error message"
               }}
+   , {step9, #{ nodename => 'a node name'
+              }}
    ]
   }
 ].
