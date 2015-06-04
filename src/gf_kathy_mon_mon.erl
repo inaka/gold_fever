@@ -49,10 +49,15 @@ handle_info(timeout, State) ->
     undefined -> its_dead;
     Larry -> lager:alert("Killing ~p", [Larry]), exit(Larry, Reason)
   end,
-  Server = gf_kathy:server(State#state.node),
-  case rpc:call(State#state.node, erlang, whereis, [Server]) of
-    undefined -> its_dead;
-    ServerPid -> lager:alert("Killing ~p", [ServerPid]), exit(ServerPid, Reason)
+  case gf_kathy:server(State#state.node) of
+    ServerPid when is_pid(ServerPid) ->
+      lager:alert("Killing ~p", [ServerPid]), exit(ServerPid, Reason);
+    ServerName ->
+      case rpc:call(State#state.node, erlang, whereis, [ServerName]) of
+        undefined -> its_dead;
+        ServerPid ->
+          lager:alert("Killing ~p", [ServerPid]), exit(ServerPid, Reason)
+      end
   end,
   {stop, normal, State};
 handle_info(

@@ -93,9 +93,23 @@ handle_info(
 handle_info(
   #{token := Token, name := Name}, expecting_maps,
   State = #state{token = Token}) ->
-  send_messages_to_gen_server({Name, State#state.node}),
-  Answers = gold_fever:get_config(step6, answers),
-  {next_state, expecting_colors, State#state{server = Name, answers = Answers}};
+  GenServer =
+    case Name of
+      Pid when is_pid(Pid) -> Pid;
+      Name when is_atom(Name) -> {Name, State#state.node};
+      _Other -> missing
+    end,
+  case GenServer of
+    missing ->
+      Message = io_lib:format(gold_fever:get_config(step3, missing), [name]),
+      gf_node_monitor:send_message(State#state.node, Message),
+      {next_state, expecting_maps, State};
+    GenServer ->
+      send_messages_to_gen_server(GenServer),
+      Answers = gold_fever:get_config(step6, answers),
+      NewState = State#state{server = Name, answers = Answers},
+      {next_state, expecting_colors, NewState}
+  end;
 handle_info(#{token := Token}, expecting_maps, State = #state{token = Token}) ->
   Message = io_lib:format(gold_fever:get_config(step3, missing), [name]),
   gf_node_monitor:send_message(State#state.node, Message),
@@ -203,12 +217,18 @@ send_messages_to_gen_server(GenServer) ->
   InfoMsg = [lists:nth(I, Message) || I <- lists:seq(1, length(Message), 3)],
   CastMsg = [lists:nth(I, Message) || I <- lists:seq(2, length(Message), 3)],
   CallMsg = [lists:nth(I, Message) || I <- lists:seq(3, length(Message), 3)],
-  gen_server:cast(GenServer, CastMsg),
-  GenServer ! InfoMsg,
+  try gen_server:cast(GenServer, CastMsg)
+  catch
+    _:ECast -> lager:warning("~p couldn't get the cast: ~p", [GenServer, ECast])
+  end,
+  try GenServer ! InfoMsg
+  catch
+    _:EInfo -> lager:warning("~p couldn't get the cast: ~p", [GenServer, EInfo])
+  end,
   try gen_server:call(GenServer, CallMsg) of
     R -> lager:notice("~p said ~p", [GenServer, R])
   catch
-    _:E -> lager:warning("~p couldn't get the call: ~p", [GenServer, E])
+    _:ECall -> lager:warning("~p couldn't get the call: ~p", [GenServer, ECall])
   end.
 
 is_proper_question(Question) when is_atom(Question) ->

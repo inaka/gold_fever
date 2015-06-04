@@ -8,7 +8,7 @@
          init/1, handle_call/3, handle_cast/2,
          handle_info/2, terminate/2, code_change/3
         ]).
--export([start_link/0, token/1]).
+-export([start_link/0, token/1, delete_token/1]).
 
 -record(state, { tokens :: #{string() => node()}
                , callers :: [pid()]
@@ -26,6 +26,9 @@ start_link() ->
 -spec token(node()) -> string().
 token(Node) -> gen_server:call(kathy, {token, Node}).
 
+-spec delete_token(node()) -> ok.
+delete_token(Node) -> gen_server:cast(kathy, {delete_token, Node}).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Callback implementation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -36,7 +39,7 @@ init(noargs) ->
 -spec handle_call(term(), term(), state()) -> {reply, term(), state()}.
 handle_call({token, Node}, _From, State) ->
   Tokens = State#state.tokens,
-  Token = ktn_random:generate(),
+  Token = base64:encode(crypto:hash(md5, term_to_binary(Node))),
   {reply, Token, State#state{tokens = maps:put(Token, Node, Tokens)}};
 handle_call(#{token := Token}, From, State) ->
   handle_call(Token, From, State);
@@ -72,6 +75,10 @@ handle_call(Token, {Caller, _}, State) ->
   {reply, FinalMsg, State#state{tokens = NewTokens, callers = NewCallers}}.
 
 -spec handle_cast(term(), state()) -> {noreply, state()}.
+handle_cast({delete_token, Node}, State) ->
+  ListOfTokens = maps:to_list(State#state.tokens),
+  NewListOfTokens = [{T, N} || {T, N} <- ListOfTokens, N /= Node],
+  {noreply, State#state{tokens = maps:from_list(NewListOfTokens)}};
 handle_cast(#{token := Token, address := Address} = Msg, State) ->
   case maps:get(Token, State#state.tokens, notfound) of
     Caller when is_pid(Caller) ->

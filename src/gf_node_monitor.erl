@@ -56,6 +56,7 @@ handle_info({nodedown, Slave, Data}, State = #state{slave = Slave}) ->
   {noreply, State};
 handle_info({nodedown, Node, Data}, State) ->
   lager:notice("~p is DOWN! (~p).", [Node, Data]),
+  gf_real_kathy:delete_token(Node),
   gf_kathy:stop(Node),
   {noreply, State}.
 
