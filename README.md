@@ -1,2 +1,42 @@
-# gold_fever
+# Gold Fever
 A Treasure Hunt for Erlangers
+
+## Introduction
+This repo provides the server for a distributed treasure hunt game using erlang nodes.
+It was originally used for Inaka's Erlang Dojo 2015, but it can hopefully be used by anyone :)
+
+## Instructions
+To run the server just clone the repo and start the app in shell:
+
+```bash
+git clone https://github.com/inaka/gold_fever.git
+cd gold_fever
+make && make shell
+```
+
+Then let the players connect to it by giving them your node name and cookie (as a bonus you can give them a *clue* to get the cookie instead).
+
+## Configuration
+The different game stages are configured by application environment. To help you with that a [sys.config.template](config/sys.config.template) is provided, along with the configuration we used at [inaka](config/inaka.config) and the [generic](config/generic.config) one that's used by default.
+If you want to start the server using your own config, just do:
+
+```bash
+CONFIG="path/to/your.config" make shell
+```
+
+You can also set the IP part of your node name by doing:
+
+```bash
+NODEIP=192.168.48.33 make shell
+```
+
+## Contact Us
+For **questions** or **general comments** regarding the use of this project,
+please use our public [hipchat room](https://www.hipchat.com/gpBpW3SsT).
+
+If you find any **bugs** or have a **problem** while using this project, please
+[open an issue](https://github.com/inaka/shotgun/issues/new) in this repo
+(or a pull request :)).
+
+And you can check all of our open-source projects at
+[inaka.github.io](http://inaka.github.io)
