@@ -26,7 +26,7 @@ start(Config) ->
 init(Config) -> {ok, #state{config = term_to_binary(Config), callers = #{}}}.
 
 -spec handle_call(term(), term(), state()) -> {reply, term(), state()}.
-handle_call(contents, {Caller, Ref}, State) ->
+handle_call(contents, {Caller, _Ref}, State) ->
   case maps:get(Caller, State#state.callers, notfound) of
     unlocked ->
       {reply, get_config(treasure, State), State};
