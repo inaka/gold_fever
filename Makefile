@@ -1,6 +1,6 @@
 PROJECT = gold_fever
 
-CONFIG ?= test/test.config
+CONFIG ?= config/generic.config
 NODEIP ?= 127.0.0.1
 
 RELX_URL := https://github.com/erlware/relx/releases/download/v2.0.0/relx

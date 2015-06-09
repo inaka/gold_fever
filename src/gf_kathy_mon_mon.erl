@@ -63,7 +63,7 @@ handle_info(timeout, State) ->
 handle_info(
   {'DOWN', Ref, process, _Pid, _Reason}, State = #state{ref = Ref}) ->
   Message = gold_fever:get_config(step5, message),
-  rpc:call(State#state.node, error_logger, warning_msg, [Message, []]),
+  gf_node_monitor:send_message(State#state.node, Message),
   {noreply, State, 500};
 handle_info(Info, State) ->
   lager:warning("Ignored info: ~p", [Info]),

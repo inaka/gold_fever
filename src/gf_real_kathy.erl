@@ -46,7 +46,7 @@ handle_call(#{token := Token}, From, State) ->
 handle_call(Token, {Caller, _}, State) ->
   {Welcome, NewCallers} =
     case lists:member(Caller, State#state.callers) of
-      true -> {"Hey again!", State#state.callers};
+      true -> {gold_fever:get_config(step7, again), State#state.callers};
       false ->
         {gold_fever:get_config(step7, welcome), [Caller|State#state.callers]}
     end,
