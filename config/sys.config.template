@@ -40,6 +40,7 @@
               , unexpected => "a message with ~p"
               }}
    , {step7, #{ welcome => "a welcoming message"
+              , again => "a re-welcoming message"
               , message => "da message"
               , expired => "an error message"
               , badauth => "an error message"
@@ -55,7 +56,7 @@
               }}
    , {step9, #{ nodename => 'a-node-name'
               , attempts => 5
-              , password => 'a-password'
+              , passwords => [a, "list", <<"of valid passwords">>]
               , warning => "a warning message"
               , rickroll => "a link"
               , unlocked => "a message"

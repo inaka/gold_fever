@@ -45,25 +45,18 @@ handle_info(timeout, State = #state{kathy_mon = undefined}) ->
   end;
 handle_info(timeout, State) ->
   Reason = gold_fever:get_config(step5, reason),
-  case rpc:call(State#state.node, erlang, whereis, [larry]) of
-    undefined -> its_dead;
-    Larry -> lager:alert("Killing ~p", [Larry]), exit(Larry, Reason)
-  end,
+  kill(larry, Reason, State),
   case gf_kathy:server(State#state.node) of
     ServerPid when is_pid(ServerPid) ->
       lager:alert("Killing ~p", [ServerPid]), exit(ServerPid, Reason);
     ServerName ->
-      case rpc:call(State#state.node, erlang, whereis, [ServerName]) of
-        undefined -> its_dead;
-        ServerPid ->
-          lager:alert("Killing ~p", [ServerPid]), exit(ServerPid, Reason)
-      end
+      kill(ServerName, Reason, State)
   end,
   {stop, normal, State};
 handle_info(
   {'DOWN', Ref, process, _Pid, _Reason}, State = #state{ref = Ref}) ->
   Message = gold_fever:get_config(step5, message),
-  rpc:call(State#state.node, error_logger, warning_msg, [Message, []]),
+  gf_node_monitor:send_message(State#state.node, Message),
   {noreply, State, 500};
 handle_info(Info, State) ->
   lager:warning("Ignored info: ~p", [Info]),
@@ -80,3 +73,12 @@ handle_cast(_Msg, State) -> {noreply, State}.
 terminate(_Reason, _State) -> ok.
 -spec code_change(term(), state(), term()) -> {ok, state()}.
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Internal functions
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+kill(Name, Reason, State) ->
+  case rpc:call(State#state.node, erlang, whereis, [Name]) of
+    undefined -> its_dead;
+    Pid -> lager:alert("Killing ~p (~p)", [Name, Pid]), exit(Pid, Reason)
+  end.

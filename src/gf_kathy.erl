@@ -5,7 +5,7 @@
 
 -record(state, { node     :: node()
                , process  :: pid()
-               , token    :: binary()
+               , token    :: iodata()
                , server   :: atom()
                , answers  :: [atom()]
                }).
@@ -44,7 +44,7 @@ process_name(Node) ->
   Bin = atom_to_binary(Node, utf8),
   binary_to_atom(<<"kathy:", Bin/binary>>, utf8).
 
--spec server(node()) -> undefined | atom().
+-spec server(node()) -> undefined | pid() | atom().
 server(Node) ->
   gen_fsm:sync_send_all_state_event(process_name(Node), server).
 

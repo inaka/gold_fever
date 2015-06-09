@@ -11,7 +11,7 @@
 -export([start/1]).
 
 -record(state, { callers :: #{pid() => unlocked | integer()}
-               , config :: map()
+               , config :: binary()
                }).
 -type state() :: #state{}.
 
@@ -23,10 +23,10 @@ start(Config) ->
 %%% Callback implementation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 -spec init(map()) -> {ok, state()}.
-init(Config) -> {ok, #state{config = Config, callers = #{}}}.
+init(Config) -> {ok, #state{config = term_to_binary(Config), callers = #{}}}.
 
 -spec handle_call(term(), term(), state()) -> {reply, term(), state()}.
-handle_call(contents, {Caller, Ref}, State) ->
+handle_call(contents, {Caller, _Ref}, State) ->
   case maps:get(Caller, State#state.callers, notfound) of
     unlocked ->
       {reply, get_config(treasure, State), State};
@@ -58,13 +58,13 @@ handle_call(Call, {Caller, Ref}, State) ->
       NewCallers = maps:put(Caller, Attempts - 1, State#state.callers),
       {reply, Message, State#state{callers = NewCallers}};
     Attempts ->
-      Password = get_config(password, State),
-      case Call of
-        Password ->
+      Passwords = get_config(passwords, State),
+      case lists:member(Call, Passwords) of
+        true ->
           Message = get_config(unlocked, State),
           NewCallers = maps:put(Caller, unlocked, State#state.callers),
           {reply, Message, State#state{callers = NewCallers}};
-        _NotPassword ->
+        false ->
           Message =
             iolist_to_binary(
               io_lib:format(get_config(wrongpwd, State), [Attempts - 1])),
@@ -85,4 +85,4 @@ terminate(_Reason, _State) -> ok.
 -spec code_change(term(), state(), term()) -> {ok, state()}.
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
 
-get_config(Key, State) -> maps:get(Key, State#state.config).
+get_config(Key, State) -> maps:get(Key, binary_to_term(State#state.config)).

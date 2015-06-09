@@ -46,26 +46,24 @@ handle_call(#{token := Token}, From, State) ->
 handle_call(Token, {Caller, _}, State) ->
   {Welcome, NewCallers} =
     case lists:member(Caller, State#state.callers) of
-      true -> {"Hey again!", State#state.callers};
+      true -> {gold_fever:get_config(step7, again), State#state.callers};
       false ->
         {gold_fever:get_config(step7, welcome), [Caller|State#state.callers]}
     end,
   CallerNode = node(Caller),
+  MessageResponse =
+    { gold_fever:get_config(step7, message)
+    , maps:put(Token, Caller, State#state.tokens)
+    },
   {Message, NewTokens} =
     case maps:get(Token, State#state.tokens, notfound) of
       Caller ->
         {gold_fever:get_config(step7, message), State#state.tokens};
-      CallerNode ->
-        { gold_fever:get_config(step7, message)
-        , maps:put(Token, Caller, State#state.tokens)
-        };
+      CallerNode -> MessageResponse;
       notfound -> {gold_fever:get_config(step7, badauth), State#state.tokens};
       OtherPid when is_pid(OtherPid) ->
         case node(OtherPid) of
-          CallerNode ->
-            { gold_fever:get_config(step7, message)
-            , maps:put(Token, Caller, State#state.tokens)
-            };
+          CallerNode -> MessageResponse;
           _OtherNode ->
             {gold_fever:get_config(step7, expired), State#state.tokens}
         end;
