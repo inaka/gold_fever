@@ -1,14 +1,14 @@
 # Gold Fever
 
-<img src="https://raw.githubusercontent.com/inaka/gold_fever/c33f50e/priv/treasure.png" align="right" style="float:right" />
+<img src="https://raw.githubusercontent.com/inaka/gold_fever/c33f50e/priv/treasure.png" align="right" style="float:right" height="200px"/>
 
 A Treasure Hunt for Erlangers
 
-### Introduction
+## Introduction
 This repo provides the server for a distributed treasure hunt game using erlang nodes.
 It was originally used for Inaka's Erlang Dojo 2015, but it can hopefully be used by anyone :)
 
-### Instructions
+## Instructions
 
 #### Booting up the Server
 To run the server just clone the repo and start the app in shell:
