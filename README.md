@@ -1,3 +1,4 @@
+<img src="https://s3.amazonaws.com/uploads.hipchat.com/15025/55900/VhtqkEBVHwH7FYQ/CHIbvviUgAEl-xs_png__599×410_.png" align="right" style="float:right" />
 # Gold Fever
 A Treasure Hunt for Erlangers
 
