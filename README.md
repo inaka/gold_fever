@@ -1,6 +1,6 @@
 # Gold Fever
 
-<img src="https://raw.githubusercontent.com/inaka/gold_fever/c33f50e/priv/treasure.png" align="right" style="float:right" height="200px"/>
+<img src="https://raw.githubusercontent.com/inaka/gold_fever/c33f50e/priv/treasure.png" align="right" style="float:right" height="250px"/>
 
 A Treasure Hunt for Erlangers
 
