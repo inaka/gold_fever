@@ -4,11 +4,11 @@
 
 A Treasure Hunt for Erlangers
 
-## Introduction
+### Introduction
 This repo provides the server for a distributed treasure hunt game using erlang nodes.
 It was originally used for Inaka's Erlang Dojo 2015, but it can hopefully be used by anyone :)
 
-## Instructions
+### Instructions
 
 #### Booting up the Server
 To run the server just clone the repo and start the app in shell:
