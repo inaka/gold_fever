@@ -20,9 +20,12 @@ Then let the players connect to it by giving them your node name and cookie (as 
 
 ### The Players
 For the players the story begins when they boot up an erlang node and connect to the server. At that time, they'll receive the first clue that will let them move along. Once they deciphered that clue they'll have to perform another action that will lead them to the next clue, and so on so far until they eventually find the treasure.
-The actual story depends on the server configuration. With [generic.config](config/generic.config) it's set up somewhere in the far west and a well known burglar has escaped with a treasure in his hands. It's the player's task to find him and retrieve the treasure to its rightful owner.
+The actual story depends on the server [configuration](#configuration). With the default configuration, the game is set up somewhere in the far west and a well known burglar has escaped with a treasure in his hands. It's the player's task to find him and retrieve the treasure to its rightful owner.
 
 ## Configuration
+### :warning: **SPOILERS SECTION** :warning:
+_(don't click the links if you just want to play with the default configuration)_
+
 The different game stages are configured by application environment. To help you with that a [sys.config.template](config/sys.config.template) is provided, along with the configuration we used at [inaka](config/inaka.config) and the [generic](config/generic.config) one that's used by default.
 If you want to start the server using your own config, just do:
 
