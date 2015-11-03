@@ -46,11 +46,16 @@ handle_info(timeout, State = #state{kathy_mon = undefined}) ->
 handle_info(timeout, State) ->
   Reason = gold_fever:get_config(step5, reason),
   kill(larry, Reason, State),
-  case gf_kathy:server(State#state.node) of
+  try gf_kathy:server(State#state.node) of
     ServerPid when is_pid(ServerPid) ->
       lager:alert("Killing ~p", [ServerPid]), exit(ServerPid, Reason);
     ServerName ->
       kill(ServerName, Reason, State)
+  catch
+    _:E ->
+      lager:warning(
+        "Couldn't kill the server: ~p~n~p",
+        [E, erlang:get_stacktrace()])
   end,
   {stop, normal, State};
 handle_info(

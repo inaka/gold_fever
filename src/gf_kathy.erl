@@ -62,8 +62,12 @@ start_link(Node) ->
 -spec init(node()) -> {ok, expecting_flowers, state(), 0}.
 init(Node) -> {ok, expecting_flowers, #state{node = Node}, 0}.
 
--spec handle_event(stop, atom(), state()) -> {stop, normal, state()}.
-handle_event(stop, _StateName, State) -> {stop, normal, State}.
+-spec handle_event(stop, atom(), state()) ->
+  {next_state, atom(), state} | {stop, normal, state()}.
+handle_event(stop, _StateName, State) -> {stop, normal, State};
+handle_event(Request, StateName, State) ->
+  lager:warning("Invalid Request: ~p", [Request]),
+  {next_state, StateName, State}.
 
 -spec handle_sync_event(server, _From, atom(), state()) ->
   {reply, atom(), atom(), state()}.
@@ -108,7 +112,7 @@ handle_info(
       send_messages_to_gen_server(GenServer),
       Answers = gold_fever:get_config(step6, answers),
       NewState = State#state{server = Name, answers = Answers},
-      {next_state, expecting_colors, NewState}
+      {next_state, expecting_colors, NewState, 10000}
   end;
 handle_info(#{token := Token}, expecting_maps, State = #state{token = Token}) ->
   Message = io_lib:format(gold_fever:get_config(step3, missing), [name]),
@@ -201,6 +205,16 @@ expecting_colors(NotMap, _From, State) ->
 
 -spec expecting_colors(term(), state()) ->
   {next_state, expecting_colors, state()}.
+expecting_colors(timeout, State) ->
+  #state{server = GenServer} = State,
+  Message = gold_fever:get_config(step4, message),
+  Len = round(length(Message) / 3),
+  Tip1 = [$0 + (I rem 10) || I <- lists:seq(1, Len)],
+  Tip2 = lists:duplicate(Len, $|),
+  Tip3 = lists:duplicate(Len, $v),
+  send_messages_to_gen_server(GenServer, Tip1, Tip2, Tip3),
+  send_messages_to_gen_server(GenServer),
+  {next_state, expecting_colors, State, 60000};
 expecting_colors(Request, State) ->
   lager:warning("Ignored Request: ~p", [Request]),
   {next_state, expecting_colors, State}.
@@ -217,13 +231,16 @@ send_messages_to_gen_server(GenServer) ->
   InfoMsg = [lists:nth(I, Message) || I <- lists:seq(1, length(Message), 3)],
   CastMsg = [lists:nth(I, Message) || I <- lists:seq(2, length(Message), 3)],
   CallMsg = [lists:nth(I, Message) || I <- lists:seq(3, length(Message), 3)],
-  try gen_server:cast(GenServer, CastMsg)
-  catch
-    _:ECast -> lager:warning("~p couldn't get the cast: ~p", [GenServer, ECast])
-  end,
+  send_messages_to_gen_server(GenServer, InfoMsg, CastMsg, CallMsg).
+
+send_messages_to_gen_server(GenServer, InfoMsg, CastMsg, CallMsg) ->
   try GenServer ! InfoMsg
   catch
     _:EInfo -> lager:warning("~p couldn't get the cast: ~p", [GenServer, EInfo])
+  end,
+  try gen_server:cast(GenServer, CastMsg)
+  catch
+    _:ECast -> lager:warning("~p couldn't get the cast: ~p", [GenServer, ECast])
   end,
   try gen_server:call(GenServer, CallMsg) of
     R -> lager:notice("~p said ~p", [GenServer, R])
@@ -235,6 +252,6 @@ is_proper_question(Question) when is_atom(Question) ->
   is_proper_question(atom_to_binary(Question, utf8));
 is_proper_question(Question) ->
   Regexes = gold_fever:get_config(step6, regexes),
-  not
-    lists:member(
-      nomatch, [re:run(Question, Regex, [caseless]) || Regex <- Regexes]).
+  [] =/=
+    lists:usort([re:run(Question, Regex, [caseless]) || Regex <- Regexes]) --
+    [nomatch].
