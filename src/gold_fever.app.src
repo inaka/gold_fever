@@ -8,8 +8,7 @@
     stdlib,
     sasl,
     lager,
-    katana,
-    shotgun
+    katana
   ]},
   {modules, []},
   {mod, {gold_fever, []}},

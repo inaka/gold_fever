@@ -39,22 +39,14 @@
               , badauth => "a message with ~p"
               , unexpected => "a message with ~p"
               }}
-   , {step7, #{ welcome => "a welcoming message"
+   , {step7, #{ image => "a file path"
+              , welcome => "a welcoming message"
               , again => "a re-welcoming message"
               , message => "da message"
               , expired => "an error message"
               , badauth => "an error message"
               }}
-   , {step8, #{ image => "a file path"
-              , path => "a-single-word-that-is-a-url-path"
-              , message => "da message"
-              , headers => #{<<"a">> => <<"map">>, <<"of">> => <<"headers">>}
-              , missing => "a message with '~p'"
-              , toosoon => "an error message"
-              , badauth => "an error message"
-              , notaurl => "an error message"
-              }}
-   , {step9, #{ nodename => 'a-node-name'
+   , {step8, #{ nodename => 'a-node-name'
               , attempts => 5
               , passwords => [a, "list", <<"of valid passwords">>]
               , warning => "a warning message"

@@ -95,12 +95,12 @@ center(Txt) -> center(<<$\s, Txt/binary, $\s>>).
 
 start_slave() ->
   [_, Host] = string:tokens(atom_to_list(node()), [$@]),
-  Name = gold_fever:get_config(step9, nodename),
+  Name = gold_fever:get_config(step8, nodename),
   Args = "-hidden -boot start_sasl -pa ebin deps/*/ebin "
          "-setcookie " ++ atom_to_list(erlang:get_cookie()),
   slave:start_link(list_to_atom(Host), Name, Args).
 
 hid_treasure(Node) ->
-  Config = application:get_env(gold_fever, step9, #{}),
+  Config = application:get_env(gold_fever, step8, #{}),
   {ok, Pid} = rpc:call(Node, gf_vault, start, [Config]),
   Pid ! hide.

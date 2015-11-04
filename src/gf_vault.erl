@@ -17,7 +17,7 @@
 
 -spec start(map()) -> {ok, pid()}.
 start(Config) ->
-  gen_server:start({local, vault}, ?MODULE, Config, [{debug, [trace, log]}]).
+  gen_server:start({local, vault}, ?MODULE, Config, [{debug, [trace]}]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Callback implementation

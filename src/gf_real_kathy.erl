@@ -58,6 +58,7 @@ handle_call(Token, {Caller, _}, State) ->
   {Message, NewTokens} =
     case maps:get(Token, State#state.tokens, notfound) of
       Caller ->
+        send_image(Caller),
         {gold_fever:get_config(step7, message), State#state.tokens};
       CallerNode -> MessageResponse;
       notfound -> {gold_fever:get_config(step7, badauth), State#state.tokens};
@@ -77,33 +78,6 @@ handle_cast({delete_token, Node}, State) ->
   ListOfTokens = maps:to_list(State#state.tokens),
   NewListOfTokens = [{T, N} || {T, N} <- ListOfTokens, N /= Node],
   {noreply, State#state{tokens = maps:from_list(NewListOfTokens)}};
-handle_cast(#{token := Token, address := Address} = Msg, State) ->
-  case maps:get(Token, State#state.tokens, notfound) of
-    Caller when is_pid(Caller) ->
-      case http_uri:parse(to_str(Address)) of
-        {error, Error} ->
-          lager:warning("Can't parse url ~p: ~p", [Address, Error]),
-          Caller ! gold_fever:get_config(step8, notaurl);
-        {ok, ParsedUrl} ->
-          put_image(ParsedUrl)
-      end;
-    notfound ->
-      lager:warning("Unexpected token: ~p", [Msg]);
-    Node ->
-      gf_node_monitor:send_message(Node, gold_fever:get_config(step8, toosoon))
-  end,
-  {noreply, State};
-handle_cast(#{token := Token} = Msg, State) ->
-  case maps:get(Token, State#state.tokens, notfound) of
-    Caller when is_pid(Caller) ->
-      Message = io_lib:format(gold_fever:get_config(step8, missing), [address]),
-      Caller ! iolist_to_binary(Message);
-    notfound ->
-      lager:warning("Unexpected token: ~p", [Msg]);
-    Node ->
-      gf_node_monitor:send_message(Node, gold_fever:get_config(step8, toosoon))
-  end,
-  {noreply, State};
 handle_cast(_Cast, State) -> {noreply, State}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -119,31 +93,7 @@ code_change(_OldVsn, State, _Extra) -> {ok, State}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Internal Functions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-put_image({_Scheme, _UserInfo, Host, Port, [$/|Path], _Query}) ->
-  ExpectedPath = gold_fever:get_config(step8, path),
-  Headers = gold_fever:get_config(step8, headers),
-  Filename = gold_fever:get_config(step8, image),
+send_image(Caller) ->
+  Filename = gold_fever:get_config(step7, image),
   {ok, Body} = file:read_file(Filename),
-  Message = iolist_to_binary(gold_fever:get_config(step8, message)),
-  FinalHeaders = Headers#{<<"x-instructions">> => Message},
-  FinalPath =
-    case lists:reverse(string:tokens(Path, [$/])) of
-      [ExpectedPath|_] -> Path;
-      _NotIncludingPocket -> string:join([Path, ExpectedPath], "/")
-    end,
-  {ok, Conn} = shotgun:open(Host, Port),
-  try shotgun:put(Conn, FinalPath, FinalHeaders, Body, #{}) of
-    {ok, Response} ->
-      lager:notice(
-        "Answer from ~s:~p~s: ~p~n", [Host, Port, FinalPath, Response]);
-    {error, Error} ->
-      lager:warning(
-        "Error from ~s:~p~s: ~p~n", [Host, Port, FinalPath, Error])
-  catch
-    _:Exception ->
-      lager:error("Exception from ~s:~p~s: ~p~n", [Host, Port, Path, Exception])
-  after
-    shotgun:close(Conn)
-  end.
-
-to_str(IOList) -> binary_to_list(iolist_to_binary(IOList)).
+  Caller ! Body.
