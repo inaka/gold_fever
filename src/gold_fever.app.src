@@ -13,6 +13,10 @@
   ]},
   {modules, []},
   {mod, {gold_fever, []}},
-  {env, []},
-  {start_phases, []}
+  {env, []},,
+  {maintainers, ["Inaka"]},
+  {licenses, ["Apache 2.0"]},
+  {links, [ {"Github", "https://github.com/inaka/gold_fever"}
+          ]},
+  {build_tools, ["erlang.mk"]}
  ]}.
