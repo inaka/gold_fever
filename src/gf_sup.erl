@@ -19,9 +19,6 @@ start_link() ->
 -spec init(noargs) ->
   {ok, {{one_for_one, 5, 10}, [supervisor:child_spec()]}}.
 init(noargs) ->
-  KatanaRandom =
-    {ktn_random, {ktn_random, start_link, []},
-      permanent, 5000, worker, [ktn_random]},
   NodeMonitor =
     {gf_node_monitor, {gf_node_monitor, start_link, []},
       permanent, 5000, worker, [gf_node_monitor]},
@@ -33,6 +30,6 @@ init(noargs) ->
       permanent, 1000, worker, [gf_real_kathy]},
   { ok
   , { {one_for_one, 5, 10}
-    , [KatanaRandom, NodeMonitor, KathySup, TheRealKathy]
+    , [NodeMonitor, KathySup, TheRealKathy]
     }
   }.
