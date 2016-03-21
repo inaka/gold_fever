@@ -1,6 +1,6 @@
 {application, gold_fever, [
   {description, "A Treasure Hunt for Erlangers"},
-  {vsn, "0.0.1"},
+  {vsn, "0.1.0"},
   {id, "gold_fever"},
   {registered, []},
   {applications, [
