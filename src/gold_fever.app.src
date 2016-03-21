@@ -17,6 +17,7 @@
   {maintainers, ["Inaka"]},
   {licenses, ["Apache 2.0"]},
   {links, [ {"Github", "https://github.com/inaka/gold_fever"}
+          , {"Blog", "http://inaka.net/blog/2015/06/09/erlang-dojo-2015/"}
           ]},
   {build_tools, ["erlang.mk"]}
  ]}.
