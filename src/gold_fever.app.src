@@ -13,7 +13,7 @@
   ]},
   {modules, []},
   {mod, {gold_fever, []}},
-  {env, []},,
+  {env, []},
   {maintainers, ["Inaka"]},
   {licenses, ["Apache 2.0"]},
   {links, [ {"Github", "https://github.com/inaka/gold_fever"}
