@@ -1,6 +1,6 @@
 {application, gold_fever, [
   {description, "A Treasure Hunt for Erlangers"},
-  {vsn, "0.0.1"},
+  {vsn, "0.1.0"},
   {id, "gold_fever"},
   {registered, []},
   {applications, [
@@ -13,6 +13,11 @@
   ]},
   {modules, []},
   {mod, {gold_fever, []}},
-  {env, []},
-  {start_phases, []}
+  {env, []},,
+  {maintainers, ["Inaka"]},
+  {licenses, ["Apache 2.0"]},
+  {links, [ {"Github", "https://github.com/inaka/gold_fever"}
+          , {"Blog", "http://inaka.net/blog/2015/06/09/erlang-dojo-2015/"}
+          ]},
+  {build_tools, ["erlang.mk"]}
  ]}.

@@ -37,7 +37,7 @@ init(Node) -> {ok, #state{node = Node}, 0}.
 handle_info(timeout, State = #state{kathy_mon = undefined}) ->
   case erlang:whereis(gf_kathy_mon:process_name(State#state.node)) of
     undefined ->
-      lager:notice("No pid yet for ~p", [State#state.node]),
+      _ = lager:notice("No pid yet for ~p", [State#state.node]),
       {noreply, State, 100};
     KathyMonPid ->
       MonRef = erlang:monitor(process, KathyMonPid),
@@ -46,17 +46,18 @@ handle_info(timeout, State = #state{kathy_mon = undefined}) ->
 handle_info(timeout, State) ->
   Reason = gold_fever:get_config(step5, reason),
   kill(larry, Reason, State),
-  try gf_kathy:server(State#state.node) of
-    ServerPid when is_pid(ServerPid) ->
-      lager:alert("Killing ~p", [ServerPid]), exit(ServerPid, Reason);
-    ServerName ->
-      kill(ServerName, Reason, State)
-  catch
-    _:E ->
-      lager:warning(
-        "Couldn't kill the server: ~p~n~p",
-        [E, erlang:get_stacktrace()])
-  end,
+  _ =
+    try gf_kathy:server(State#state.node) of
+      ServerPid when is_pid(ServerPid) ->
+        _ = lager:alert("Killing ~p", [ServerPid]), exit(ServerPid, Reason);
+      ServerName ->
+        kill(ServerName, Reason, State)
+    catch
+      _:E ->
+        _ = lager:warning(
+          "Couldn't kill the server: ~p~n~p",
+          [E, erlang:get_stacktrace()])
+    end,
   {stop, normal, State};
 handle_info(
   {'DOWN', Ref, process, _Pid, _Reason}, State = #state{ref = Ref}) ->
@@ -64,7 +65,7 @@ handle_info(
   gf_node_monitor:send_message(State#state.node, Message),
   {noreply, State, 500};
 handle_info(Info, State) ->
-  lager:warning("Ignored info: ~p", [Info]),
+  _ = lager:warning("Ignored info: ~p", [Info]),
   {noreply, State}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -85,5 +86,5 @@ code_change(_OldVsn, State, _Extra) -> {ok, State}.
 kill(Name, Reason, State) ->
   case rpc:call(State#state.node, erlang, whereis, [Name]) of
     undefined -> its_dead;
-    Pid -> lager:alert("Killing ~p (~p)", [Name, Pid]), exit(Pid, Reason)
+    Pid -> _ = lager:alert("Killing ~p (~p)", [Name, Pid]), exit(Pid, Reason)
   end.
