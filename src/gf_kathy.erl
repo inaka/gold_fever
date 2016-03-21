@@ -66,7 +66,7 @@ init(Node) -> {ok, expecting_flowers, #state{node = Node}, 0}.
   {next_state, atom(), state} | {stop, normal, state()}.
 handle_event(stop, _StateName, State) -> {stop, normal, State};
 handle_event(Request, StateName, State) ->
-  lager:warning("Invalid Request: ~p", [Request]),
+  _ = lager:warning("Invalid Request: ~p", [Request]),
   {next_state, StateName, State}.
 
 -spec handle_sync_event(server, _From, atom(), state()) ->
@@ -131,14 +131,14 @@ handle_info(NotMap, expecting_maps, State) ->
   gf_node_monitor:send_message(State#state.node, Message),
   {next_state, expecting_maps, State};
 handle_info(Info, StateName, State) ->
-  lager:notice("~p received at ~p", [Info, StateName]),
+  _ = lager:notice("~p received at ~p", [Info, StateName]),
   gf_node_monitor:send_message(
     State#state.node, "This is not the way to talk to me"),
   {next_state, StateName, State}.
 
 -spec terminate(term(), atom(), state()) -> ok.
 terminate(Reason, StateName, _State) ->
-  lager:notice("Terminating in ~p with reason ~p", [StateName, Reason]).
+  _ = lager:notice("Terminating in ~p with reason ~p", [StateName, Reason]).
 
 -spec code_change(term() | {down, term()}, atom(), state(), term()) ->
     {ok, atom(), state()}.
@@ -147,7 +147,7 @@ code_change(_, StateName, State, _) -> {ok, StateName, State}.
 -spec expecting_flowers(term(), _From, state()) ->
   {reply, not_an_fsm, expecting_flowers, state()}.
 expecting_flowers(Request, _From, State) ->
-  lager:warning("Invalid Request: ~p", [Request]),
+  _ = lager:warning("Invalid Request: ~p", [Request]),
   {reply, not_an_fsm, expecting_flowers, State}.
 
 -spec expecting_flowers(term(), state()) ->
@@ -160,19 +160,19 @@ expecting_flowers(timeout, State) ->
   {larry, State#state.node} ! Message,
   {next_state, expecting_flowers, State#state{token = Token}, 1000};
 expecting_flowers(Request, State) ->
-  lager:warning("Ignored Request: ~p", [Request]),
+  _ = lager:warning("Ignored Request: ~p", [Request]),
   {next_state, expecting_flowers, State}.
 
 -spec expecting_maps(term(), _From, state()) ->
   {reply, not_an_fsm, expecting_maps, state()}.
 expecting_maps(Request, _From, State) ->
-  lager:warning("Invalid Request: ~p", [Request]),
+  _ = lager:warning("Invalid Request: ~p", [Request]),
   {reply, not_an_fsm, expecting_maps, State}.
 
 -spec expecting_maps(term(), state()) ->
   {next_state, expecting_maps, state()}.
 expecting_maps(Request, State) ->
-  lager:warning("Ignored Request: ~p", [Request]),
+  _ = lager:warning("Ignored Request: ~p", [Request]),
   {next_state, expecting_maps, State}.
 
 -spec expecting_colors(term(), _From, state()) ->
@@ -216,7 +216,7 @@ expecting_colors(timeout, State) ->
   send_messages_to_gen_server(GenServer),
   {next_state, expecting_colors, State, 60000};
 expecting_colors(Request, State) ->
-  lager:warning("Ignored Request: ~p", [Request]),
+  _ = lager:warning("Ignored Request: ~p", [Request]),
   {next_state, expecting_colors, State}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -234,19 +234,26 @@ send_messages_to_gen_server(GenServer) ->
   send_messages_to_gen_server(GenServer, InfoMsg, CastMsg, CallMsg).
 
 send_messages_to_gen_server(GenServer, InfoMsg, CastMsg, CallMsg) ->
-  try GenServer ! InfoMsg
-  catch
-    _:EInfo -> lager:warning("~p couldn't get the cast: ~p", [GenServer, EInfo])
-  end,
-  try gen_server:cast(GenServer, CastMsg)
-  catch
-    _:ECast -> lager:warning("~p couldn't get the cast: ~p", [GenServer, ECast])
-  end,
-  try gen_server:call(GenServer, CallMsg) of
-    R -> lager:notice("~p said ~p", [GenServer, R])
-  catch
-    _:ECall -> lager:warning("~p couldn't get the call: ~p", [GenServer, ECall])
-  end.
+  _ =
+    try GenServer ! InfoMsg
+    catch
+      _:EInfo ->
+        lager:warning("~p couldn't get the cast: ~p", [GenServer, EInfo])
+    end,
+  _ =
+    try gen_server:cast(GenServer, CastMsg)
+    catch
+      _:ECast ->
+        lager:warning("~p couldn't get the cast: ~p", [GenServer, ECast])
+    end,
+  _ =
+    try gen_server:call(GenServer, CallMsg) of
+      R -> lager:notice("~p said ~p", [GenServer, R])
+    catch
+      _:ECall ->
+        lager:warning("~p couldn't get the call: ~p", [GenServer, ECall])
+    end,
+  ok.
 
 is_proper_question(Question) when is_atom(Question) ->
   is_proper_question(atom_to_binary(Question, utf8));

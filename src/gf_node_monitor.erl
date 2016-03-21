@@ -32,30 +32,32 @@ send_message(Node, Message) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Callback implementation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
--spec init(noargs) -> {ok, state()}.
-init(noargs) ->
-  {ok, Slave} = start_slave(),
-  hid_treasure(Slave),
-  ok = net_kernel:monitor_nodes(true, [nodedown_reason]),
-  {ok, #state{slave = Slave}}.
+-spec init(noargs) -> {ok, state(), 0}.
+init(noargs) -> {ok, #state{}, 0}.
 
 -spec handle_call(X, term(), state()) -> {reply, {unknown, X}, state()}.
 handle_call(X, _From, State) -> {reply, {unknown, X}, State}.
 
--spec handle_info({event(), atom(), [tuple()]}, state()) -> {noreply, state()}.
+-spec handle_info(timeout | {event(), atom(), [tuple()]}, state()) ->
+  {noreply, state()}.
+handle_info(timeout, State = #state{slave = undefined}) ->
+  {ok, Slave} = start_slave(),
+  hid_treasure(Slave),
+  ok = net_kernel:monitor_nodes(true, [nodedown_reason]),
+  {noreply, State#state{slave = Slave}};
 handle_info({nodeup, Slave, Data}, State = #state{slave = Slave}) ->
-  lager:notice("Slave is UP! (~p)~n~n", [Data]),
+  _ = lager:notice("Slave is UP! (~p)~n~n", [Data]),
   {noreply, State};
 handle_info({nodeup, Node, Data}, State) ->
-  lager:notice("~p is UP! (~p)~n~n", [Node, Data]),
+  _ = lager:notice("~p is UP! (~p)~n~n", [Node, Data]),
   ok = welcome_message(Node),
-  gf_kathy:start(Node),
+  {ok, _} = gf_kathy:start(Node),
   {noreply, State};
 handle_info({nodedown, Slave, Data}, State = #state{slave = Slave}) ->
-  lager:emergency("Slave is DOWN! (~p)~n~n", [Data]),
+  _ = lager:emergency("Slave is DOWN! (~p)~n~n", [Data]),
   {noreply, State};
 handle_info({nodedown, Node, Data}, State) ->
-  lager:notice("~p is DOWN! (~p).", [Node, Data]),
+  _ = lager:notice("~p is DOWN! (~p).", [Node, Data]),
   gf_real_kathy:delete_token(Node),
   gf_kathy:stop(Node),
   {noreply, State}.
@@ -88,7 +90,7 @@ format(Message) ->
 
 center(<<Txt:78/binary>>) -> <<$|, Txt/binary, $|>>;
 center(<<Txt:78/binary, Rest/binary>>) ->
-  lager:warning("Too long message ~s || ~w", [Txt, Rest]),
+  _ = lager:warning("Too long message ~s || ~w", [Txt, Rest]),
   <<$|, Txt/binary, $|>>;
 center(<<Txt:77/binary>>) -> <<$|, Txt/binary, " |">>;
 center(Txt) -> center(<<$\s, Txt/binary, $\s>>).

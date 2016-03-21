@@ -82,13 +82,13 @@ handle_cast(#{token := Token, address := Address} = Msg, State) ->
     Caller when is_pid(Caller) ->
       case http_uri:parse(to_str(Address)) of
         {error, Error} ->
-          lager:warning("Can't parse url ~p: ~p", [Address, Error]),
+          _ = lager:warning("Can't parse url ~p: ~p", [Address, Error]),
           Caller ! gold_fever:get_config(step8, notaurl);
         {ok, ParsedUrl} ->
           put_image(ParsedUrl)
       end;
     notfound ->
-      lager:warning("Unexpected token: ~p", [Msg]);
+      _ = lager:warning("Unexpected token: ~p", [Msg]);
     Node ->
       gf_node_monitor:send_message(Node, gold_fever:get_config(step8, toosoon))
   end,
@@ -97,11 +97,14 @@ handle_cast(#{token := Token} = Msg, State) ->
   case maps:get(Token, State#state.tokens, notfound) of
     Caller when is_pid(Caller) ->
       Message = io_lib:format(gold_fever:get_config(step8, missing), [address]),
-      Caller ! iolist_to_binary(Message);
+      Caller ! iolist_to_binary(Message),
+      ok;
     notfound ->
-      lager:warning("Unexpected token: ~p", [Msg]);
+      _ = lager:warning("Unexpected token: ~p", [Msg]),
+      ok;
     Node ->
-      gf_node_monitor:send_message(Node, gold_fever:get_config(step8, toosoon))
+      gf_node_monitor:send_message(Node, gold_fever:get_config(step8, toosoon)),
+      ok
   end,
   {noreply, State};
 handle_cast(_Cast, State) -> {noreply, State}.
@@ -134,14 +137,16 @@ put_image({_Scheme, _UserInfo, Host, Port, [$/|Path], _Query}) ->
   {ok, Conn} = shotgun:open(Host, Port),
   try shotgun:put(Conn, FinalPath, FinalHeaders, Body, #{}) of
     {ok, Response} ->
-      lager:notice(
+      _ = lager:notice(
         "Answer from ~s:~p~s: ~p~n", [Host, Port, FinalPath, Response]);
     {error, Error} ->
-      lager:warning(
+      _ = lager:warning(
         "Error from ~s:~p~s: ~p~n", [Host, Port, FinalPath, Error])
   catch
     _:Exception ->
-      lager:error("Exception from ~s:~p~s: ~p~n", [Host, Port, Path, Exception])
+      _ =
+        lager:error(
+          "Exception from ~s:~p~s: ~p~n", [Host, Port, Path, Exception])
   after
     shotgun:close(Conn)
   end.

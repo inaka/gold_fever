@@ -37,7 +37,7 @@ init(Node) -> {ok, #state{node = Node}, 0}.
 handle_info(timeout, State = #state{kathy = undefined}) ->
   case erlang:whereis(gf_kathy:process_name(State#state.node)) of
     undefined ->
-      lager:notice("No pid yet for ~p", [State#state.node]),
+      _ = lager:notice("No pid yet for ~p", [State#state.node]),
       {noreply, State, 100};
     KathyPid ->
       MonRef = erlang:monitor(process, KathyPid),
@@ -46,10 +46,12 @@ handle_info(timeout, State = #state{kathy = undefined}) ->
 handle_info(
   {'DOWN', Ref, process, Pid, Reason},
   State = #state{kathy = Pid, ref = Ref}) ->
-  lager:notice("Kathy (~p) died (~p), and soon I will die too", [Pid, Reason]),
+  _ =
+    lager:notice(
+      "Kathy (~p) died (~p), and soon I will die too", [Pid, Reason]),
   {stop, Reason, State};
 handle_info(Info, State) ->
-  lager:warning("Ignored info: ~p", [Info]),
+  _ = lager:warning("Ignored info: ~p", [Info]),
   {noreply, State}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
