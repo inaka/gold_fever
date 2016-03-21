@@ -5,19 +5,22 @@ NODEIP ?= 127.0.0.1
 
 RELX_URL := https://github.com/erlware/relx/releases/download/v2.0.0/relx
 
-DEPS = eper lager katana shotgun
-SELL_DEPS = sync
-TEST_DEPS = xref_runner
+DEPS = goldrush lager katana shotgun
+SELL_DEPS = eper sync
+TEST_DEPS = mixer
+BUILD_DEPS = inaka_mk hexer_mk
 
-dep_katana = git https://github.com/inaka/erlang-katana.git 0.2.5
-dep_eper = git https://github.com/massemanet/eper.git 0.90.0
-dep_shotgun = git https://github.com/inaka/shotgun.git 0.1.11
-dep_sync = git https://github.com/inaka/sync.git 0.1
-dep_xref_runner = git https://github.com/inaka/xref_runner.git 0.2.2
+dep_lager       = hex 3.0.2
+dep_goldrush    = hex 0.1.7
+dep_katana      = hex 0.2.22
+dep_shotgun 		= hex 0.2.3
+dep_eper 				= git https://github.com/massemanet/eper.git     0.97.3
+dep_sync        = git https://github.com/rustyio/sync.git        11df81d
+dep_mixer       = git https://github.com/inaka/mixer.git         0.1.5
+dep_inaka_mk    = git https://github.com/inaka/inaka.mk.git      1.0.0
+dep_hexer_mk    = git https://github.com/inaka/hexer.mk.git      1.1.0
 
-DIALYZER_DIRS := ebin/
-DIALYZER_OPTS := --verbose --statistics -Werror_handling \
-                 -Wrace_conditions #-Wunmatched_returns
+DEP_PLUGINS = inaka_mk hexer_mk
 
 include erlang.mk
 
@@ -26,15 +29,6 @@ ERLC_OPTS += +warn_unused_vars +warn_export_all +warn_shadow_vars +warn_unused_i
 ERLC_OPTS += +warn_bif_clash +warn_unused_record +warn_deprecated_function +warn_obsolete_guard +strict_validation
 ERLC_OPTS += +warn_export_vars +warn_exported_vars +warn_missing_spec +warn_untyped_record +debug_info
 
-TEST_ERLC_OPTS += +'{parse_transform, lager_transform}'
-CT_OPTS += -cover test/${PROJECT}.coverspec -vvv -erl_args -config ${CONFIG}
+CT_OPTS = -cover test/cover.spec -vvv -erl_args -config ${CONFIG}
 
 SHELL_OPTS += -name ${PROJECT}@${NODEIP} -config ${CONFIG} -s lager -s sync -s ${PROJECT}
-
-quicktests: app
-	@$(MAKE) --no-print-directory app-build test-dir ERLC_OPTS="$(TEST_ERLC_OPTS)"
-	@mkdir -p logs/
-	$(gen_verbose) $(CT_RUN) -suite $(addsuffix _SUITE,$(CT_SUITES)) $(CT_OPTS)
-
-erldocs:
-	erldocs . -o docs
