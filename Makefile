@@ -6,7 +6,7 @@ NODEIP ?= 127.0.0.1
 RELX_URL := https://github.com/erlware/relx/releases/download/v2.0.0/relx
 
 DEPS = goldrush lager katana shotgun
-SELL_DEPS = eper sync
+SHELL_DEPS = eper sync
 TEST_DEPS = mixer
 BUILD_DEPS = inaka_mk hexer_mk
 
