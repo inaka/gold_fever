@@ -10,8 +10,8 @@ SHELL_DEPS = eper sync
 TEST_DEPS = mixer
 BUILD_DEPS = inaka_mk hexer_mk
 
-dep_lager       = hex 3.0.2
-dep_goldrush    = hex 0.1.7
+dep_lager       = hex 3.7.0
+dep_goldrush    = hex 0.1.9
 dep_katana      = hex 0.2.22
 dep_shotgun     = hex 0.2.3
 dep_eper        = git https://github.com/massemanet/eper.git     0.97.3
